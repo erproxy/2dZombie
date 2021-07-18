@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Enemy;
 
 namespace Player
 {
@@ -24,9 +25,16 @@ namespace Player
                 {
                     _hp += _armor;
                 }
-            }else _hp -= damage;
+            }
+            else
+            {
+                _hp -= damage;
+                _armor = 0;
+            }
             
-            if(_hp <= 0){
+            if(_hp <= 0)
+            {
+                Enemy.StationBehavior._listPlayers.Remove(gameObject);
                 gameObject.SetActive(false);
             }
         }

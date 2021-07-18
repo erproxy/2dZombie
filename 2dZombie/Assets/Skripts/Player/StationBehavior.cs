@@ -76,8 +76,10 @@ namespace Player
         private List<BaseState> _allStates;
 
 
+
+
         private void Start()
-        {
+        {Enemy.StationBehavior._listPlayers.Add(gameObject);
             _ammunitionPistol = _ammunitionStartPistol;
             _ammunitionAk47 = _ammunitionStartAk47;
             
@@ -210,10 +212,6 @@ namespace Player
 
                                 }
                             }
-                        }
-                        else
-                        {
-
                         }
                     }
                     else

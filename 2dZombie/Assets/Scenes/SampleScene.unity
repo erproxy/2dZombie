@@ -2662,6 +2662,8 @@ GameObject:
   - component: {fileID: 540419503}
   - component: {fileID: 540419504}
   - component: {fileID: 540419505}
+  - component: {fileID: 540419507}
+  - component: {fileID: 540419506}
   m_Layer: 6
   m_Name: Zombie
   m_TagString: Enemy
@@ -2713,6 +2715,50 @@ CircleCollider2D:
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
   m_Radius: 0.5
+--- !u!50 &540419506
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 540419502}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 20
+  m_LinearDrag: 3
+  m_AngularDrag: 0.05
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
+--- !u!114 &540419507
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 540419502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78bc7732812a4c7eb722284ed30f7a2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _zombieModel: {fileID: 1043760822}
+  _animator: {fileID: 1546863239}
+  _zombieRb: {fileID: 540419506}
+  _moveSpeed: 80
+  _player: {fileID: 1700351152}
+  _handPos: {fileID: 0}
+  _whatIsSolid:
+    serializedVersion: 2
+    m_Bits: 0
+  _attackRange: 0
+  _weaponData: {fileID: 0}
 --- !u!1 &642742607
 GameObject:
   m_ObjectHideFlags: 0
@@ -3302,6 +3348,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac0b09e7857660247b1477e93731de29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!95 &1546863239 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 3805879922677020846, guid: 6e8b46d4fa6838043977ab625f8f3740, type: 3}
+  m_PrefabInstance: {fileID: 3805879923177094678}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1691770046
 GameObject:
   m_ObjectHideFlags: 0
@@ -3433,7 +3484,7 @@ MonoBehaviour:
   _playerModel: {fileID: 68852230}
   _animator: {fileID: 1996173214}
   _playerRb: {fileID: 1700351155}
-  _moveSpeed: 5
+  _moveSpeed: 600
   _parent: {fileID: 642742607}
   _muzzlePos: {fileID: 1851154591}
   _prefabBulletAk47: {fileID: 4640770711586761928, guid: 9cd9edd9e7487db458f891fd69b9a84f, type: 3}
@@ -3443,6 +3494,10 @@ MonoBehaviour:
     m_Bits: 192
   _attackRangeKnife: 0.4
   _weaponData: {fileID: 11400000, guid: 7fccc5e3bcb25304cbde0b56d30dd221, type: 2}
+  _ammunitionStartPistol: 10
+  _ammunitionStartAk47: 20
+  _reloadingStartTimePistol: 0.5
+  _reloadingStartTimeAk47: 1
 --- !u!50 &1700351155
 Rigidbody2D:
   serializedVersion: 4
@@ -3455,8 +3510,8 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDrag: 0
+  m_Mass: 20
+  m_LinearDrag: 10
   m_AngularDrag: 0.05
   m_GravityScale: 0
   m_Material: {fileID: 0}
@@ -4104,15 +4159,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3805879922677020832, guid: 6e8b46d4fa6838043977ab625f8f3740, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3805879922677020832, guid: 6e8b46d4fa6838043977ab625f8f3740, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3805879922677020832, guid: 6e8b46d4fa6838043977ab625f8f3740, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3805879922677020832, guid: 6e8b46d4fa6838043977ab625f8f3740, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x

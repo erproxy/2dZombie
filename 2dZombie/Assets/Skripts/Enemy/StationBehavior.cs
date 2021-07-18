@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,7 +9,6 @@ namespace Enemy
     {
 
         [Header("Zombie")] 
-        [SerializeField] private Transform _zombieModel;
         [SerializeField] private Animator _animator;
         [SerializeField] private Rigidbody2D _zombieRb;
         [SerializeField] private float _moveSpeed;
@@ -18,17 +18,22 @@ namespace Enemy
         public static List<GameObject> _listPlayers = new List<GameObject>();
         private float _dist;
         private float _minDist;
-        private GameObject _cashEnemy;
+        private GameObject _cashPlayer;
 
         [Header("Attack")]
-        [SerializeField] private GameObject _handPos;
+        [SerializeField] private Transform _handPos;
         [SerializeField] private LayerMask _whatIsSolid;
         [SerializeField] private float _attackRange;
         [SerializeField] private Weapons _weaponData;
-        
-        private float _attackCouldown=0.2f;
+        [SerializeField] private float _distanceForAttack;
+
+        private float _attackStartCouldown=0.4f;
         private float _couldown = 0;
 
+
+        public enum Attacking{COULDOWN, RDY, KILLING}
+
+        private Attacking _attacking = Attacking.RDY;
         
         private BaseState _currentState;
         private List<BaseState> _allStates;
@@ -40,11 +45,15 @@ namespace Enemy
             
             _allStates = new List<BaseState>()
             {
-                new AttackState(_animator, this),
-                new RunState(_animator,this)
+                new AttackState(_animator,_handPos, _whatIsSolid, _attackRange, _weaponData.Dmg, _zombieRb, _moveSpeed,
+                    gameObject.transform,_distanceForAttack, this),
+                new RunState(_animator,_handPos, _whatIsSolid, _attackRange, _weaponData.Dmg, _zombieRb, _moveSpeed,
+                    gameObject.transform,_distanceForAttack, this),
+                new IdleState(_animator,_handPos, _whatIsSolid, _attackRange, _weaponData.Dmg, _zombieRb, _moveSpeed,
+                    gameObject.transform,_distanceForAttack, this),
             };
 
-            _currentState = _allStates[0];
+            _currentState = _allStates[1];
         }
 
         private void FixedUpdate()
@@ -52,51 +61,74 @@ namespace Enemy
             Run();
         }
         
-
-        //перезарядка оружия
-        private void Recharge()
-        {
-            _couldown = _attackCouldown;
-        }
  
         private void Update()
         {
-            if (_listPlayers.Count>0)
+            if (_listPlayers.Count > 0)
             {
                 _minDist = Vector3.Distance(_listPlayers[0].transform.position, gameObject.transform.position);
+                _cashPlayer = _listPlayers[0];
                 foreach (var GO in _listPlayers)
                 {
                     _dist = Vector3.Distance(GO.transform.position, gameObject.transform.position);
-                    if (_dist<=_minDist)
+                    if (_dist <= _minDist)
                     {
-                        _cashEnemy = GO;
+                        _cashPlayer = GO;
                         _minDist = _dist;
                     }
                 }
             }
+            else _cashPlayer = null;
+            
 
             Attack();
+            Relouding();
+            Idle();
         }
-        
+
+
+        //Перезарядка атаки
+        private void Relouding()
+        {
+            if (_attacking == Attacking.KILLING)
+            {
+                _couldown = _attackStartCouldown;
+                _attacking = Attacking.COULDOWN;
+            }
+
+            if (_attacking == Attacking.COULDOWN)
+            {
+                _couldown -= Time.deltaTime;
+            }
+
+            if (_couldown<=0)
+            {
+                _attacking = Attacking.RDY;
+            }
+            
+        }
 
         public void Run()
         {
-       //     _currentState.Run();
+         _currentState.Run(_cashPlayer);
         }
 
         public void Attack()
         {
-           
+           _currentState.Attack( _cashPlayer, ref _attacking);
         }
 
+        public void Idle()
+        {
+            _currentState.Idle(ref _attacking);
+        }
 
-        
-        
-        //Удобная настройка дальности атаки через инспектор
+        //Удобня настройка дальности атаки через инспектор
         private void OnDrawGizmosSelected(){
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(_handPos.transform.position, _attackRange);
         }
+        
         
         public void SwitchState<T>() where T : BaseState
         {

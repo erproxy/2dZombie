@@ -31,9 +31,9 @@ namespace Player
             Vector2 movement;
             movement.x = _movementJoystick.Horizontal;
             movement.y = _movementJoystick.Vertical;
-
             
-            rb.MovePosition(rb.position + movement * moveSpeed * Time.fixedDeltaTime);
+            rb.AddForce(movement * moveSpeed);
+            
         }
 
         public override void Attack()
