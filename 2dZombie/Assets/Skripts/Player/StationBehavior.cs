@@ -25,10 +25,27 @@ namespace Player
         [SerializeField] private GameObject _muzzlePos;
         [SerializeField] private GameObject _prefabBulletAk47;
         [SerializeField] private GameObject _prefabBulletPistol;
+        
+        [Tooltip("Слои, которые будут атакованы")]
         [SerializeField] private LayerMask _whatIsSolid;
         [SerializeField] private float _attackRangeKnife;
         [SerializeField] private Weapons _weaponData;
         
+        //боезапас
+        [Tooltip("Боезопас Пистолета")]
+        [SerializeField] private int _ammunitionStartPistol;
+        [Tooltip("Боезопас Ак47")]
+        [SerializeField] private int _ammunitionStartAk47;
+        private int _ammunitionPistol;
+        private int _ammunitionAk47;
+        
+        //Время перезарядки
+        [Tooltip("Стартовое время перезарядки Пистолета")]
+        [SerializeField] private float _reloadingStartTimePistol;
+        [Tooltip("Стартовое время перезарядки Ак47")]
+        [SerializeField] private float _reloadingStartTimeAk47;
+        private float _reloadingTimePistol;
+        private float _reloadingTimeAk47;
         
         private float _attackStartTimePistol=0.3f;
         private float _attackStartTimeAk47=0.1f;
@@ -42,10 +59,17 @@ namespace Player
         
         
         
+        
         private List<Weapon> _weaponsInHand = new List<Weapon>();
         protected int id = 0;
+        
+        //Все Enum
+        
+        public enum RdyToShotAk47{AMMUNITION, RDY}
+        private RdyToShotAk47 _rdyToShotAk47=RdyToShotAk47.RDY;
+        public enum RdyToShotPistol{AMMUNITION, RDY}
+        private RdyToShotPistol _rdyToShotPistol=RdyToShotPistol.RDY;
         public enum Weapon{KNIFE,PISTOL,AK47};
-
         private Weapon _weapon = Weapon.KNIFE;
         
         private BaseState _currentState;
@@ -54,6 +78,12 @@ namespace Player
 
         private void Start()
         {
+            _ammunitionPistol = _ammunitionStartPistol;
+            _ammunitionAk47 = _ammunitionStartAk47;
+            
+            _reloadingTimePistol = _reloadingStartTimePistol;
+            _reloadingTimeAk47 = _reloadingStartTimeAk47;
+            
             _weaponsInHand.Add(Weapon.KNIFE);
             _weaponsInHand.Add(Weapon.PISTOL);
             _weaponsInHand.Add(Weapon.AK47);
@@ -85,14 +115,40 @@ namespace Player
                 id = 0;
             }
             _weapon = _weaponsInHand[id];
-            Recharge();
+            RechargeAttackCouldown();
         }    
-        //перезарядка оружия
-        private void Recharge()
+        //Сброс кулдауна на атаку
+        private void RechargeAttackCouldown()
         {
             if (_weapon == Weapon.AK47)  _couldown = _attackStartTimeAk47;
             else if (_weapon==Weapon.PISTOL) _couldown = _attackStartTimePistol;
             else if (_weapon==Weapon.KNIFE)_couldown = _attackStartKnife;
+        }    
+        
+        //Перезарядка оружия
+        private void Reloading()
+        {
+            if (_rdyToShotAk47 == RdyToShotAk47.AMMUNITION)
+            {
+                if (_reloadingTimeAk47 <= 0)
+                {
+                    _ammunitionAk47 = _ammunitionStartAk47;
+                    _reloadingTimeAk47 = _reloadingStartTimeAk47;
+                    _rdyToShotAk47 = RdyToShotAk47.RDY;
+                }
+                else _reloadingTimeAk47 -= Time.deltaTime;
+            }
+
+            if (_rdyToShotPistol == RdyToShotPistol.AMMUNITION)
+            {
+                if (_reloadingTimePistol <= 0)
+                {
+                    _ammunitionPistol = _ammunitionStartPistol;
+                    _reloadingTimePistol = _reloadingStartTimePistol;
+                    _rdyToShotPistol = RdyToShotPistol.RDY;
+                }
+                else _reloadingTimePistol -= Time.deltaTime;
+            }
         }
         //Выкидывания оружия
         public void DropWeapon()
@@ -121,7 +177,7 @@ namespace Player
 
         public void Attack()
         {
-            if (_attackJoystick.Horizontal!=0 && _attackJoystick.Vertical != 0)
+            if (_attackJoystick.Horizontal != 0 && _attackJoystick.Vertical != 0)
             {
                 Vector2 movement;
                 movement.x = _attackJoystick.Horizontal;
@@ -139,7 +195,8 @@ namespace Player
                     if (_weapon == Weapon.KNIFE)
                     {
                         _animator.Play("AttackKnife");
-                        Collider2D[] enemies = Physics2D.OverlapCircleAll (_muzzlePos.transform.position, _attackRangeKnife,  _whatIsSolid);
+                        Collider2D[] enemies = Physics2D.OverlapCircleAll(_muzzlePos.transform.position,
+                            _attackRangeKnife, _whatIsSolid);
                         if (enemies != null)
                         {
                             for (int i = 0; i < enemies.Length; i++)
@@ -156,13 +213,14 @@ namespace Player
                         }
                         else
                         {
-                            
+
                         }
-                    }else
+                    }
+                    else
                     {
                         GameObject cashBullet = null;
                         //Запихивание в кэш префаб пули, который нужно будет заспавнить или выпустить
-                        if (_weapon == Weapon.AK47)
+                        if (_weapon == Weapon.AK47 && _rdyToShotAk47!=RdyToShotAk47.AMMUNITION)
                         {
                             int id = _listBulletsReadyForShot.Count - 1;
                             while (id >= 0)
@@ -171,13 +229,14 @@ namespace Player
                                 {
                                     cashBullet = _listBulletsReadyForShot[id];
                                     RemoveFromPull(id);
+                                    _ammunitionAk47--;
                                     break;
                                 }
-                                
+
                                 id--;
                             }
                         }
-                        else if (_weapon == Weapon.PISTOL)
+                        else if (_weapon == Weapon.PISTOL && _rdyToShotPistol!= RdyToShotPistol.AMMUNITION)
                         {
                             int id = _listBulletsReadyForShot.Count - 1;
                             while (id >= 0)
@@ -186,8 +245,10 @@ namespace Player
                                 {
                                     cashBullet = _listBulletsReadyForShot[id];
                                     RemoveFromPull(id);
+                                    _rdyToShotPistol--;
                                     break;
                                 }
+
                                 id--;
                             }
                         }
@@ -195,23 +256,30 @@ namespace Player
                         if (cashBullet == null)
                         {
                             {
-                                if (_weapon == Weapon.AK47)
+                                if (_weapon == Weapon.AK47&& _rdyToShotAk47!=RdyToShotAk47.AMMUNITION)
                                 {
                                     Instantiate(_prefabBulletAk47, _muzzlePos.transform.position,
                                         _playerModel.transform.rotation, _parent.transform);
+                                    _ammunitionAk47--;
                                 }
-                                else if (_weapon == Weapon.PISTOL)
+                                else if (_weapon == Weapon.PISTOL&& _rdyToShotPistol!= RdyToShotPistol.AMMUNITION)
                                 {
                                     Instantiate(_prefabBulletPistol, _muzzlePos.transform.position,
                                         _playerModel.transform.rotation, _parent.transform);
+                                    _rdyToShotPistol--;
                                 }
                             }
                         }
                     }
-                    Recharge();
+
+                    RechargeAttackCouldown();
                 }
                 else _couldown -= Time.deltaTime;
             }
+
+            if (_ammunitionAk47 == 0) _rdyToShotAk47 = RdyToShotAk47.AMMUNITION;
+            if (_ammunitionPistol == 0) _rdyToShotPistol = RdyToShotPistol.AMMUNITION;
+            Reloading();
         }
 
         //Активация Пули и убирание его из пула
