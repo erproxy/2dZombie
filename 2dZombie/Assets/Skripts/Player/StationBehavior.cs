@@ -1,4 +1,5 @@
 ﻿using System;
+using Photon.Pun;
 using System.Collections;
 using System.Collections.Generic;
 using Enemy;
@@ -8,8 +9,12 @@ using Random = System.Random;
 
 namespace Player
 {
+    
     public class StationBehavior : MonoBehaviour, IStationStateSwitcher
     {
+        private PhotonView _photonView;
+        
+        
         [Header("Joysticks")]
         [SerializeField] private Joystick _movementJoystick;
         [SerializeField] private Joystick _attackJoystick;
@@ -23,7 +28,7 @@ namespace Player
 
 
         [Header("Attack")]
-        [SerializeField] private GameObject _parent;
+        private GameObject _parent;
         [SerializeField] private GameObject _muzzlePos;
         [SerializeField] private GameObject _prefabBulletAk47;
         [SerializeField] private GameObject _prefabBulletPistol;
@@ -100,6 +105,9 @@ namespace Player
 
         private void Start()
         {
+            _parent = GameObject.FindWithTag("BulletsParrent");
+            
+            _photonView = GetComponent<PhotonView>();
             Enemy.StationBehavior._listPlayers.Add(gameObject);
             _ammunitionPistol = _ammunitionStartPistol;
             _ammunitionAk47 = _ammunitionStartAk47;
@@ -121,7 +129,8 @@ namespace Player
 
         private void FixedUpdate()
         {
-            
+          //  if (!_photonView.IsMine) return;
+
             Run();
         }
         
@@ -179,6 +188,8 @@ namespace Player
         }
         private void Update()
         {
+          //  if (!_photonView.IsMine) return;
+            
             Idle();
             Attack();
             AudioRuning();

@@ -8,6 +8,10 @@ TagManager:
   - Enemy
   - BulletAk47
   - BulletPistol
+  - Bullet
+  - MovementJoy
+  - AttackJoy
+  - BulletsParrent
   layers:
   - Default
   - TransparentFX
