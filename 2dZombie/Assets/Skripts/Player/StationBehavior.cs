@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Enemy;
 using System.Linq;
 using UnityEngine;
+using Random = System.Random;
 
 namespace Player
 {
@@ -39,32 +41,50 @@ namespace Player
         private int _ammunitionPistol;
         private int _ammunitionAk47;
         
-        //Время перезарядки
-        [Tooltip("Стартовое время перезарядки Пистолета")]
-        [SerializeField] private float _reloadingStartTimePistol;
-        [Tooltip("Стартовое время перезарядки Ак47")]
-        [SerializeField] private float _reloadingStartTimeAk47;
-        private float _reloadingTimePistol;
-        private float _reloadingTimeAk47;
+ 
         
         private float _attackStartTimePistol=0.3f;
         private float _attackStartTimeAk47=0.1f;
-        private float _attackStartKnife=0.1f;
+        private float _attackStartKnife=0.3f;
         private float _couldown = 0;
         
         private List<GameObject> _listBullets;
         public static List<GameObject> _listBulletsReadyForShot = new List<GameObject>();
-        
-        
-        
-        
-        
-        
+
         private List<Weapon> _weaponsInHand = new List<Weapon>();
         protected int id = 0;
+
+        [Header("Звуковое сопровождение")]
+        [SerializeField] private AudioClip[] _audioclipMoving;
+        [SerializeField] private AudioSource _audioSourceMoving;
         
+        //Звуки Ак47
+        [SerializeField] private AudioClip[] _audioclipFireAk47;
+        [SerializeField] private AudioSource _audioSourceFireAk47;
+        [SerializeField] private AudioClip[] _audioclipReloadingAk47;
+        [SerializeField] private AudioSource _audioSourceReloadingAk47;
+        //Звуки пистолета
+        [SerializeField] private AudioClip[] _audioclipFirePistol;
+        [SerializeField] private AudioSource _audioSourceFirePistol;
+        [SerializeField] private AudioClip[] _audioclipReloadingPistol;
+        [SerializeField] private AudioSource _audioSourceReloadingPistol;
+        //Звуки ножа
+        [SerializeField] private AudioClip[] _audioClipAttackEnemy;
+        [SerializeField] private AudioClip[] _audioClipAttackWall;
+        [SerializeField] private AudioClip[] _audioClipAttackNothing;
+        [SerializeField] private AudioSource _audioSourceAttackKnife;
+        
+
         //Все Enum
-        
+
+        public enum HitEnemyWithKnife{ENEMY,WALL,NOTHING }
+
+        private HitEnemyWithKnife _hitEnemyWithKnife = HitEnemyWithKnife.NOTHING;
+        public enum ReloadingAk47{RELOADING, END}
+        private ReloadingAk47 _reloadingAk47 = ReloadingAk47.END;
+        public enum ReloadingPistol{RELOADING, END}
+        private ReloadingPistol _reloadingPistol = ReloadingPistol.END;
+
         public enum RdyToShotAk47{AMMUNITION, RDY}
         private RdyToShotAk47 _rdyToShotAk47=RdyToShotAk47.RDY;
         public enum RdyToShotPistol{AMMUNITION, RDY}
@@ -79,12 +99,10 @@ namespace Player
 
 
         private void Start()
-        {Enemy.StationBehavior._listPlayers.Add(gameObject);
+        {
+            Enemy.StationBehavior._listPlayers.Add(gameObject);
             _ammunitionPistol = _ammunitionStartPistol;
             _ammunitionAk47 = _ammunitionStartAk47;
-            
-            _reloadingTimePistol = _reloadingStartTimePistol;
-            _reloadingTimeAk47 = _reloadingStartTimeAk47;
             
             _weaponsInHand.Add(Weapon.KNIFE);
             _weaponsInHand.Add(Weapon.PISTOL);
@@ -103,7 +121,7 @@ namespace Player
 
         private void FixedUpdate()
         {
-            Idle();
+            
             Run();
         }
         
@@ -132,26 +150,23 @@ namespace Player
         {
             if (_rdyToShotAk47 == RdyToShotAk47.AMMUNITION)
             {
-                if (_reloadingTimeAk47 <= 0)
+                if (_reloadingAk47 == ReloadingAk47.END)
                 {
-                    _ammunitionAk47 = _ammunitionStartAk47;
-                    _reloadingTimeAk47 = _reloadingStartTimeAk47;
-                    _rdyToShotAk47 = RdyToShotAk47.RDY;
+                    _reloadingAk47 = ReloadingAk47.RELOADING;
+                    StartCoroutine(AudioReloading(_audioclipReloadingAk47,_audioSourceReloadingAk47));
                 }
-                else _reloadingTimeAk47 -= Time.deltaTime;
             }
-
+            
             if (_rdyToShotPistol == RdyToShotPistol.AMMUNITION)
             {
-                if (_reloadingTimePistol <= 0)
+                if (_reloadingPistol == ReloadingPistol.END) 
                 {
-                    _ammunitionPistol = _ammunitionStartPistol;
-                    _reloadingTimePistol = _reloadingStartTimePistol;
-                    _rdyToShotPistol = RdyToShotPistol.RDY;
+                    _reloadingPistol = ReloadingPistol.RELOADING;
+                   StartCoroutine(AudioReloading(_audioclipReloadingPistol,_audioSourceReloadingPistol));
                 }
-                else _reloadingTimePistol -= Time.deltaTime;
             }
         }
+
         //Выкидывания оружия
         public void DropWeapon()
         {
@@ -164,7 +179,9 @@ namespace Player
         }
         private void Update()
         {
+            Idle();
             Attack();
+            AudioRuning();
         }
 
         public void Idle()
@@ -177,6 +194,112 @@ namespace Player
             _currentState.Run(_playerRb, _moveSpeed, ref _weapon);
         }
 
+        //Звуковое сопровождение бега
+        private void AudioRuning()
+        {
+            if (_movementJoystick.Horizontal!=0 && _movementJoystick.Vertical != 0)
+            {
+                if (!_audioSourceMoving.isPlaying)
+                {
+                    int id=0;
+                    foreach (var audio in _audioclipMoving)
+                    {
+                        if (audio==_audioSourceMoving.clip)
+                        {
+                            break;
+                        }
+                        id++;
+                    }
+
+                    if (id == _audioclipMoving.Length - 1)
+                    {
+                        id = 0;
+                    }
+                    else id++;
+                    _audioSourceMoving.clip = _audioclipMoving[id];
+                    _audioSourceMoving.Play();
+                }
+            }
+        }
+
+        //Звуковое сопровождение атаки стрельды
+        private void AudioFire(AudioClip[] audioClips, AudioSource audioSource)
+        {
+                    int id=0;
+                    foreach (var audio in audioClips)
+                    {
+                        if (audio==audioSource.clip)
+                        {
+                            break;
+                        }
+                        id++;
+                    }
+
+                    if (id == audioClips.Length - 1)
+                    {
+                        id = 0;
+                    }
+                    else id++;
+                    audioSource.clip = audioClips[id];
+                    audioSource.Play();
+        }
+        //Звук перезарядки
+        IEnumerator AudioReloading(AudioClip[] audioClips, AudioSource audioSource)
+        {
+            audioSource.clip = audioClips[0];
+            audioSource.Play();
+
+            while (true)
+            {
+                if (audioClips.Length==1&&!audioSource.isPlaying)
+                {
+                    CheckAudioRes(audioSource);
+                    yield break;
+                }
+                else
+                if (!audioSource.isPlaying)
+                {
+                    int id = 0;
+                    foreach (var audio in audioClips)
+                    {
+                        if (audio == audioSource.clip)
+                        {
+                            break;
+                        }
+                        id++;
+                    }
+                    
+                    if (id == audioClips.Length - 1)
+                    {
+                        CheckAudioRes(audioSource);
+                        yield break;
+                    }else id++;
+                
+                    audioSource.clip = audioClips[id];
+                    audioSource.Play();
+                }
+
+                yield return null;
+            }
+        }
+        //Проверка какой аудиоресурс был загружен в корутину
+        private void CheckAudioRes(AudioSource audioSource)
+        {
+            if (audioSource == _audioSourceReloadingAk47)
+            {
+                _ammunitionAk47 = _ammunitionStartAk47;
+                _rdyToShotAk47 = RdyToShotAk47.RDY;
+                _reloadingAk47 = ReloadingAk47.END;
+            }
+            if (audioSource == _audioSourceReloadingPistol)
+            {
+                        
+                _ammunitionPistol = _ammunitionStartPistol;
+                _rdyToShotPistol = RdyToShotPistol.RDY;
+                _reloadingPistol = ReloadingPistol.END;
+                        
+            }
+        }
         public void Attack()
         {
             if (_attackJoystick.Horizontal != 0 && _attackJoystick.Vertical != 0)
@@ -205,14 +328,38 @@ namespace Player
                             {
                                 if (enemies[i].CompareTag("Enemy"))
                                 {
+                                    _hitEnemyWithKnife = HitEnemyWithKnife.ENEMY;
                                     enemies[i].GetComponent<EnemyHp>().TakeDamage(_weaponData.Dmg);
+                                    break;
                                 }
-                                else if (enemies[i].CompareTag("Wall"))
+                                if (enemies[i].CompareTag("Wall"))
                                 {
-
+                                    _hitEnemyWithKnife = HitEnemyWithKnife.WALL;
+                                    break;
                                 }
                             }
                         }
+
+                        if (_hitEnemyWithKnife==HitEnemyWithKnife.ENEMY)
+                        {
+                            _audioSourceAttackKnife.clip =
+                                _audioClipAttackEnemy[new Random().Next(0, _audioClipAttackEnemy.Length - 1)];
+                            _audioSourceAttackKnife.Play();
+                        }
+                        if (_hitEnemyWithKnife==HitEnemyWithKnife.WALL)
+                        {
+                            _audioSourceAttackKnife.clip =
+                                _audioClipAttackWall[new Random().Next(0, _audioClipAttackWall.Length - 1)];
+                            _audioSourceAttackKnife.Play();
+                        }
+                        if (_hitEnemyWithKnife==HitEnemyWithKnife.NOTHING)
+                        {
+                            _audioSourceAttackKnife.clip =
+                                _audioClipAttackNothing[new Random().Next(0, _audioClipAttackNothing.Length - 1)];
+                            _audioSourceAttackKnife.Play();
+                        }
+
+                        _hitEnemyWithKnife = HitEnemyWithKnife.NOTHING;
                     }
                     else
                     {
@@ -228,6 +375,7 @@ namespace Player
                                     cashBullet = _listBulletsReadyForShot[id];
                                     RemoveFromPull(id);
                                     _ammunitionAk47--;
+                                    AudioFire(_audioclipFireAk47,_audioSourceFireAk47);
                                     break;
                                 }
 
@@ -243,7 +391,8 @@ namespace Player
                                 {
                                     cashBullet = _listBulletsReadyForShot[id];
                                     RemoveFromPull(id);
-                                    _rdyToShotPistol--;
+                                    _ammunitionPistol--;
+                                    AudioFire(_audioclipFirePistol,_audioSourceFirePistol);
                                     break;
                                 }
 
@@ -259,12 +408,14 @@ namespace Player
                                     Instantiate(_prefabBulletAk47, _muzzlePos.transform.position,
                                         _playerModel.transform.rotation, _parent.transform);
                                     _ammunitionAk47--;
+                                    AudioFire(_audioclipFireAk47,_audioSourceFireAk47);
                                 }
                                 else if (_weapon == Weapon.PISTOL&& _rdyToShotPistol!= RdyToShotPistol.AMMUNITION)
                                 {
                                     Instantiate(_prefabBulletPistol, _muzzlePos.transform.position,
                                         _playerModel.transform.rotation, _parent.transform);
-                                    _rdyToShotPistol--;
+                                    _ammunitionPistol--;
+                                    AudioFire(_audioclipFirePistol,_audioSourceFirePistol);
                                 }
                             }
                         }

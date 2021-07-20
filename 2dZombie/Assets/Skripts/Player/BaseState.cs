@@ -24,5 +24,7 @@ namespace Player
         public abstract void Run(Rigidbody2D transform, float moveSpeed, ref StationBehavior.Weapon weapon);
 
         public abstract void Attack();
+
+
     }
 }
