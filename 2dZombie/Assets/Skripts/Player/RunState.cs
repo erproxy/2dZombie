@@ -22,9 +22,9 @@ namespace Player
 
         public override void Run(Rigidbody2D rb, float moveSpeed, ref StationBehavior.Weapon weapon)
         {
-            if (weapon == StationBehavior.Weapon.KNIFE)_animator.Play("RunKnife");
-            else if (weapon==StationBehavior.Weapon.PISTOL)_animator.Play("RunPistol");
-            else if (weapon==StationBehavior.Weapon.AK47)_animator.Play("RunAk47");
+            // if (weapon == StationBehavior.Weapon.KNIFE)_animator.Play("RunKnife");
+            // else if (weapon==StationBehavior.Weapon.PISTOL)_animator.Play("RunPistol");
+            // else if (weapon==StationBehavior.Weapon.AK47)_animator.Play("RunAk47");
 
            
             

@@ -13,12 +13,12 @@ namespace Player
 
         public override void Idle(ref StationBehavior.Weapon weapon)
         {
-            if (_attackJoystick.Horizontal==0 && _attackJoystick.Vertical == 0)
-            {
-                if (weapon == StationBehavior.Weapon.KNIFE)_animator.Play("IdleKnife");
-            }
-            if (weapon==StationBehavior.Weapon.PISTOL)_animator.Play("IdlePistol");
-            else if (weapon==StationBehavior.Weapon.AK47)_animator.Play("IdleAk47");
+            // if (_attackJoystick.Horizontal==0 && _attackJoystick.Vertical == 0)
+            // {
+            //     if (weapon == StationBehavior.Weapon.KNIFE)_animator.Play("IdleKnife");
+            // }
+            // if (weapon==StationBehavior.Weapon.PISTOL)_animator.Play("IdlePistol");
+            // else if (weapon==StationBehavior.Weapon.AK47)_animator.Play("IdleAk47");
         }
 
         public override void Run(Rigidbody2D rb, float moveSpeed, ref StationBehavior.Weapon weapon)

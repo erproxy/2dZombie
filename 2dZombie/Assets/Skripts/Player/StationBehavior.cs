@@ -6,18 +6,26 @@ using Enemy;
 using System.Linq;
 using UnityEngine;
 using Random = System.Random;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using Ui;
+
 
 namespace Player
 {
     
     public class StationBehavior : MonoBehaviour, IStationStateSwitcher
     {
+
+        
+        
+        
         private PhotonView _photonView;
         
         
         [Header("Joysticks")]
-        [SerializeField] private Joystick _movementJoystick;
-        [SerializeField] private Joystick _attackJoystick;
+        private Joystick _movementJoystick;
+        private Joystick _attackJoystick;
 
         [Header("Player")] 
         [SerializeField] private Transform _playerModel;
@@ -56,8 +64,8 @@ namespace Player
         private List<GameObject> _listBullets;
         public static List<GameObject> _listBulletsReadyForShot = new List<GameObject>();
 
-        private List<Weapon> _weaponsInHand = new List<Weapon>();
-        protected int id = 0;
+        public static  List<Weapon> _weaponsInHand = new List<Weapon>();
+        public static int id = 0;
 
         [Header("Звуковое сопровождение")]
         [SerializeField] private AudioClip[] _audioclipMoving;
@@ -90,21 +98,31 @@ namespace Player
         public enum ReloadingPistol{RELOADING, END}
         private ReloadingPistol _reloadingPistol = ReloadingPistol.END;
 
+        //Атака ножом 
+        private enum AttackKnife{ATTACKING, NONE}
+
+        private AttackKnife _attackKnife = AttackKnife.NONE;
         public enum RdyToShotAk47{AMMUNITION, RDY}
         private RdyToShotAk47 _rdyToShotAk47=RdyToShotAk47.RDY;
         public enum RdyToShotPistol{AMMUNITION, RDY}
         private RdyToShotPistol _rdyToShotPistol=RdyToShotPistol.RDY;
         public enum Weapon{KNIFE,PISTOL,AK47};
-        private Weapon _weapon = Weapon.KNIFE;
+        public static  Weapon _weapon = Weapon.KNIFE;
         
         private BaseState _currentState;
         private List<BaseState> _allStates;
 
 
+        //Ивенты 
 
 
+
+
+        
         private void Start()
         {
+            _movementJoystick = GameObject.FindWithTag("MovementJoy").GetComponent<Joystick>();
+            _attackJoystick = GameObject.FindWithTag("AttackJoy").GetComponent<Joystick>();
             _parent = GameObject.FindWithTag("BulletsParrent");
             
             _photonView = GetComponent<PhotonView>();
@@ -129,22 +147,22 @@ namespace Player
 
         private void FixedUpdate()
         {
-          //  if (!_photonView.IsMine) return;
-
+            if (!_photonView.IsMine) return;
+        
             Run();
         }
         
         //Смена оружия
         public void ChangeWeapon()
         {
-            
+
+            //if (!_photonView.IsMine) return;
             id++;
             if (id==_weaponsInHand.Count)
             {
                 id = 0;
             }
             _weapon = _weaponsInHand[id];
-            RechargeAttackCouldown();
         }    
         //Сброс кулдауна на атаку
         private void RechargeAttackCouldown()
@@ -178,7 +196,7 @@ namespace Player
 
         //Выкидывания оружия
         public void DropWeapon()
-        {
+        {if (!_photonView.IsMine) return;
             if (id != 0)
             {
                 _weaponsInHand.RemoveAt(id);
@@ -188,11 +206,29 @@ namespace Player
         }
         private void Update()
         {
-          //  if (!_photonView.IsMine) return;
             
+            if (!_photonView.IsMine) return;
             Idle();
             Attack();
             AudioRuning();
+
+
+            if (_attackKnife == AttackKnife.ATTACKING)
+            {
+                _animator.SetInteger("StateInInt", 7);
+            }else
+            if(_movementJoystick.Horizontal!=0 && _movementJoystick.Vertical != 0)
+            {
+                if (_weapon == Weapon.KNIFE) _animator.SetInteger("StateInInt",4);
+                if (_weapon == Weapon.PISTOL) _animator.SetInteger("StateInInt",5);
+                if (_weapon == Weapon.AK47) _animator.SetInteger("StateInInt",6);
+            }
+            else
+            {
+                if (_weapon == Weapon.KNIFE) _animator.SetInteger("StateInInt",1);
+                if (_weapon == Weapon.PISTOL) _animator.SetInteger("StateInInt",2);
+                if (_weapon == Weapon.AK47) _animator.SetInteger("StateInInt",3);
+            }
         }
 
         public void Idle()
@@ -330,7 +366,7 @@ namespace Player
                     //Если в руке нож произойдет одна атака, в противном случае выпускается пуля
                     if (_weapon == Weapon.KNIFE)
                     {
-                        _animator.Play("AttackKnife");
+                        _attackKnife = AttackKnife.ATTACKING;
                         Collider2D[] enemies = Physics2D.OverlapCircleAll(_muzzlePos.transform.position,
                             _attackRangeKnife, _whatIsSolid);
                         if (enemies != null)
@@ -374,6 +410,7 @@ namespace Player
                     }
                     else
                     {
+                        
                         GameObject cashBullet = null;
                         //Запихивание в кэш префаб пули, который нужно будет заспавнить или выпустить
                         if (_weapon == Weapon.AK47 && _rdyToShotAk47!=RdyToShotAk47.AMMUNITION)
@@ -435,7 +472,7 @@ namespace Player
                     RechargeAttackCouldown();
                 }
                 else _couldown -= Time.deltaTime;
-            }
+            } else _attackKnife = AttackKnife.NONE;
 
             if (_ammunitionAk47 == 0) _rdyToShotAk47 = RdyToShotAk47.AMMUNITION;
             if (_ammunitionPistol == 0) _rdyToShotPistol = RdyToShotPistol.AMMUNITION;
@@ -464,5 +501,9 @@ namespace Player
             var state = _allStates.FirstOrDefault(s => s is T);
             _currentState = state;
         }
+
+
     }
+
+
 }
