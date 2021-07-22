@@ -35,7 +35,8 @@ namespace Player
             if(_hp <= 0)
             {
                 Enemy.StationBehavior._listPlayers.Remove(gameObject);
-                gameObject.SetActive(false);
+                Destroy(gameObject);
+                //gameObject.SetActive(false);
             }
         }
     }

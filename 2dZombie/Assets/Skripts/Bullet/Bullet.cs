@@ -19,13 +19,17 @@ namespace Bullet
                 if (hitInfo.collider.CompareTag("Enemy"))
                 {
                     hitInfo.collider.GetComponent<EnemyHp>().TakeDamage(_damage);
+                    Destroy(gameObject);
                 }
                 else if (hitInfo.collider.CompareTag("Wall"))
                 {
-
+                    Destroy(gameObject);
+                } else if (hitInfo.collider.CompareTag("Player"))
+                {
+                    Destroy(gameObject);
                 }
                 
-                Player.StationBehavior._listBulletsReadyForShot.Add(gameObject);
+             //   Player.StationBehavior._listBulletsReadyForShot.Add(gameObject);
                 gameObject.SetActive(false);
             }
 

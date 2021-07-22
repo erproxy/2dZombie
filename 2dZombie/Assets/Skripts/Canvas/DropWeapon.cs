@@ -5,9 +5,7 @@ using Player;
 
 namespace Ui 
 {
-    
-    
-    public class ChangeWeapon : MonoBehaviour, IPointerClickHandler
+    public class DropWeapon: MonoBehaviour, IPointerClickHandler
     {
         private EventPlayer eventPlayer = new EventPlayer();
         
@@ -16,10 +14,10 @@ namespace Ui
         {
             // EventPlayer eventPlayer = new EventPlayer();
             // eventPlayer.ClickChangeWeapon += new SomeAction(Test);
-          //  eventPlayer.InvokeEventChangeWeapon();
+            //  eventPlayer.InvokeEventChangeWeapon();
 
-          StationBehavior stationBehavior = new StationBehavior();
-          stationBehavior.ChangeWeapon();
+            StationBehavior stationBehavior = new StationBehavior();
+            stationBehavior.DropWeapon();
         }
 
 

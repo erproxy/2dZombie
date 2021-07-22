@@ -12,8 +12,8 @@ namespace NetCore
         [SerializeField] private GameObject _playerPrefab;
         private void Start()
         {
-            PhotonNetwork.Instantiate(_playerPrefab.name, new Vector3(new Random().Next((int) -5f, (int) 5f),
-                new Random().Next((int) -5f, (int) 5f)), Quaternion.identity);
+            PhotonNetwork.Instantiate(_playerPrefab.name, new Vector3(new Random().Next((int) -2f, (int) 2f),
+                new Random().Next((int) -2f, (int) 2f)), Quaternion.identity);
         }
 
         public void Leave()

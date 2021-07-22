@@ -30,7 +30,7 @@ namespace Enemy
         private float _attackStartCouldown=0.4f;
         private float _couldown = 0;
 
-
+        
         public enum Attacking{COULDOWN, RDY, KILLING}
 
         private Attacking _attacking = Attacking.RDY;
@@ -84,6 +84,15 @@ namespace Enemy
             Attack();
             Relouding();
             Idle();
+            if (_attacking!=Attacking.RDY)
+            {
+                _animator.SetInteger("StateIntIn",3);
+            }else
+            if (_cashPlayer!=null)
+            {
+                _animator.SetInteger("StateIntIn",2);
+                
+            }else _animator.SetInteger("StateIntIn",1);
         }
 
 
@@ -120,7 +129,7 @@ namespace Enemy
 
         public void Idle()
         {
-            _currentState.Idle(ref _attacking);
+            _currentState.Idle( ref _attacking);
         }
 
         //Удобня настройка дальности атаки через инспектор

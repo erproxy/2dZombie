@@ -6,20 +6,15 @@ using Enemy;
 using System.Linq;
 using UnityEngine;
 using Random = System.Random;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-using Ui;
+
 
 
 namespace Player
 {
     
-    public class StationBehavior : MonoBehaviour, IStationStateSwitcher
+    public class StationBehavior : MonoBehaviourPunCallbacks, IStationStateSwitcher
     {
 
-        
-        
-        
         private PhotonView _photonView;
         
         
@@ -40,6 +35,10 @@ namespace Player
         [SerializeField] private GameObject _muzzlePos;
         [SerializeField] private GameObject _prefabBulletAk47;
         [SerializeField] private GameObject _prefabBulletPistol;
+        [SerializeField] private GameObject _fireFromGun;
+        [SerializeField] private GameObject _fireFromPistol;
+        [SerializeField] private GameObject _fireFromAk47;
+        
         
         [Tooltip("Слои, которые будут атакованы")]
         [SerializeField] private LayerMask _whatIsSolid;
@@ -53,12 +52,12 @@ namespace Player
         [SerializeField] private int _ammunitionStartAk47;
         private int _ammunitionPistol;
         private int _ammunitionAk47;
-        
- 
-        
+
+
+        private float _fireTime = 0.15f;
         private float _attackStartTimePistol=0.3f;
         private float _attackStartTimeAk47=0.1f;
-        private float _attackStartKnife=0.3f;
+        private float _attackStartKnife=0.5f;
         private float _couldown = 0;
         
         private List<GameObject> _listBullets;
@@ -196,7 +195,8 @@ namespace Player
 
         //Выкидывания оружия
         public void DropWeapon()
-        {if (!_photonView.IsMine) return;
+        {
+          //  if (!_photonView.IsMine) return;
             if (id != 0)
             {
                 _weaponsInHand.RemoveAt(id);
@@ -412,56 +412,61 @@ namespace Player
                     {
                         
                         GameObject cashBullet = null;
-                        //Запихивание в кэш префаб пули, который нужно будет заспавнить или выпустить
-                        if (_weapon == Weapon.AK47 && _rdyToShotAk47!=RdyToShotAk47.AMMUNITION)
-                        {
-                            int id = _listBulletsReadyForShot.Count - 1;
-                            while (id >= 0)
-                            {
-                                if (_listBulletsReadyForShot[id].tag == "BulletAk47")
-                                {
-                                    cashBullet = _listBulletsReadyForShot[id];
-                                    RemoveFromPull(id);
-                                    _ammunitionAk47--;
-                                    AudioFire(_audioclipFireAk47,_audioSourceFireAk47);
-                                    break;
-                                }
-
-                                id--;
-                            }
-                        }
-                        else if (_weapon == Weapon.PISTOL && _rdyToShotPistol!= RdyToShotPistol.AMMUNITION)
-                        {
-                            int id = _listBulletsReadyForShot.Count - 1;
-                            while (id >= 0)
-                            {
-                                if (_listBulletsReadyForShot[id].tag == "BulletPistol")
-                                {
-                                    cashBullet = _listBulletsReadyForShot[id];
-                                    RemoveFromPull(id);
-                                    _ammunitionPistol--;
-                                    AudioFire(_audioclipFirePistol,_audioSourceFirePistol);
-                                    break;
-                                }
-
-                                id--;
-                            }
-                        }
+                        // //Запихивание в кэш префаб пули, который нужно будет заспавнить или выпустить
+                        // if (_weapon == Weapon.AK47 && _rdyToShotAk47!=RdyToShotAk47.AMMUNITION)
+                        // {
+                        //     int id = _listBulletsReadyForShot.Count - 1;
+                        //     while (id >= 0)
+                        //     {
+                        //         if (_listBulletsReadyForShot[id].tag == "BulletAk47")
+                        //         {
+                        //             cashBullet = _listBulletsReadyForShot[id];
+                        //             RemoveFromPull(id);
+                        //             _ammunitionAk47--;
+                        //             AudioFire(_audioclipFireAk47,_audioSourceFireAk47);
+                        //             break;
+                        //         }
+                        //
+                        //         id--;
+                        //     }
+                        // }
+                        // else if (_weapon == Weapon.PISTOL && _rdyToShotPistol!= RdyToShotPistol.AMMUNITION)
+                        // {
+                        //     int id = _listBulletsReadyForShot.Count - 1;
+                        //     while (id >= 0)
+                        //     {
+                        //         if (_listBulletsReadyForShot[id].tag == "BulletPistol")
+                        //         {
+                        //             cashBullet = _listBulletsReadyForShot[id];
+                        //             RemoveFromPull(id);
+                        //             _ammunitionPistol--;
+                        //             AudioFire(_audioclipFirePistol,_audioSourceFirePistol);
+                        //             break;
+                        //         }
+                        //
+                        //         id--;
+                        //     }
+                        // }
 
                         if (cashBullet == null)
                         {
                             {
+                                
                                 if (_weapon == Weapon.AK47&& _rdyToShotAk47!=RdyToShotAk47.AMMUNITION)
                                 {
-                                    Instantiate(_prefabBulletAk47, _muzzlePos.transform.position,
-                                        _playerModel.transform.rotation, _parent.transform);
+                                    _fireFromAk47.SetActive(true);
+                                    _fireFromGun.SetActive(true);
+                                    PhotonNetwork.Instantiate(_prefabBulletAk47.name, _muzzlePos.transform.position,
+                                        _playerModel.transform.rotation);
                                     _ammunitionAk47--;
                                     AudioFire(_audioclipFireAk47,_audioSourceFireAk47);
                                 }
                                 else if (_weapon == Weapon.PISTOL&& _rdyToShotPistol!= RdyToShotPistol.AMMUNITION)
                                 {
-                                    Instantiate(_prefabBulletPistol, _muzzlePos.transform.position,
-                                        _playerModel.transform.rotation, _parent.transform);
+                                    _fireFromPistol.SetActive(true);
+                                    _fireFromGun.SetActive(true);
+                                    PhotonNetwork.Instantiate(_prefabBulletPistol.name, _muzzlePos.transform.position,
+                                        _playerModel.transform.rotation);
                                     _ammunitionPistol--;
                                     AudioFire(_audioclipFirePistol,_audioSourceFirePistol);
                                 }
@@ -471,12 +476,26 @@ namespace Player
 
                     RechargeAttackCouldown();
                 }
-                else _couldown -= Time.deltaTime;
             } else _attackKnife = AttackKnife.NONE;
 
             if (_ammunitionAk47 == 0) _rdyToShotAk47 = RdyToShotAk47.AMMUNITION;
             if (_ammunitionPistol == 0) _rdyToShotPistol = RdyToShotPistol.AMMUNITION;
             Reloading();
+            
+            _fireTime-=Time.deltaTime;
+            _couldown -= Time.deltaTime;
+            if (_fireTime<=0)
+            {
+                _fireTime = 0.15f;
+                _fireFromAk47.SetActive(false);
+                _fireFromPistol.SetActive(false);  
+                _fireFromGun.SetActive(false);
+            }
+        }
+
+        private void LateUpdate()
+        {
+            
         }
 
         //Активация Пули и убирание его из пула
