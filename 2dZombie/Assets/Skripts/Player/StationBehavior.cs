@@ -8,7 +8,6 @@ using UnityEngine;
 using Random = System.Random;
 
 
-
 namespace Player
 {
     
@@ -54,7 +53,7 @@ namespace Player
         private int _ammunitionAk47;
 
 
-        private float _fireTime = 0.15f;
+        private float _fireTime = 0.3f;
         private float _attackStartTimePistol=0.3f;
         private float _attackStartTimeAk47=0.1f;
         private float _attackStartKnife=0.5f;

@@ -52,6 +52,9 @@ TagManager:
   - name: Ground
     uniqueID: 4156887873
     locked: 0
+  - name: Effects
+    uniqueID: 876970237
+    locked: 0
   - name: Units
     uniqueID: 1090606063
     locked: 0
